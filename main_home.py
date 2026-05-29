@@ -3,7 +3,7 @@ import dht
 import network
 import socket
 import time
-import ntptime
+
 
 # --- НАСТРОЙКИ ---
 ssid = 'LiveS1'
@@ -38,25 +38,9 @@ first_run = True
 
 last_sensor_read = 0
 sensor_interval = 2000  # Опрос каждые 2 секунды
-try:
-    ntptime.settime()
-        #print("Time synced")
-except:
-        # print("Time sync failed")
-    pass
-
 
 # 3. Функция генерации HTML
 def get_html():
-    UTC_OFFSET = 3 * 3600
-
-    try:
-        t_tuple = time.localtime(time.time() + UTC_OFFSET)
-        time_now = "{:02d}:{:02d}".format(t_tuple[3], t_tuple[4])
-        date_now = "{:02d}.{:02d}.{:d}".format(t_tuple[2], t_tuple[1], t_tuple[0])
-    except:
-        time_now, date_now = "--:--", "--.--.----"
-
     return f"""
     <!DOCTYPE html>
     <html>
@@ -75,20 +59,37 @@ def get_html():
     </head>
     <body>
         <div class="box">
-            <h1>{time_now}</h1>
-            <h3>{date_now}</h3>
+            <!-- Сюда JavaScript будет подставлять время компьютера -->
+            <h1 id="local-time">--:--:--</h1>
+            <h3 id="local-date">--.--.----</h3>
             <hr>
             <h2>Метеостанция</h2>
             <p>Температура: <span class="val">{t_now} &deg;C</span></p>
             <p>Влажность: <span class="val">{h_now} %</span></p>
             <hr>
-            <hr>
             <p>Температура:</p>
             <p>Мин: <span class="statt">{temp_min}</span> | Макс: <span class="stat">{temp_max}</span></p>
             <hr>
             <p>Влажность:</p>
-             <p>Мин: <span class="statt">{h_min}</span> | Макс: <span class="stat">{h_max}</span></p>
+            <p>Мин: <span class="statt">{h_min}</span> | Макс: <span class="stat">{h_max}</span></p>
         </div>
+
+        <script>
+            function updateClock() {{
+                const now = new Date();
+
+                // Форматируем время компьютера (ЧЧ:ММ:СС)
+                const timeStr = now.toLocaleTimeString('ru-RU', {{ hour: '2-digit', minute: '2-digit', second: '2-digit' }});
+                // Форматируем дату компьютера (ДД.ММ.ГГГГ)
+                const dateStr = now.toLocaleDateString('ru-RU');
+
+                document.getElementById('local-time').textContent = timeStr;
+                document.getElementById('local-date').textContent = dateStr;
+            }}
+            // Запускаем сразу и обновляем каждую секунду
+            updateClock();
+            setInterval(updateClock, 1000);
+        </script>
     </body>
     </html>
     """
